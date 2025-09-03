@@ -62,7 +62,7 @@
             if (Date.now() - lastSend > 5000) {
                 lastSend = Date.now();
                 var img = new Image();
-                img.src = "http://192.168.100.253/" + "?action=" + action;
+                img.src = "http://172.16.1.21/" + "?action=" + action;
                 // เปลี่ยน <IP_ESP32> เป็น IP ของ ESP32 ที่รัน host2get.py
             }
         }
