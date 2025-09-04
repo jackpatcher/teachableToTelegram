@@ -1,24 +1,56 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>Teachable Machine to ESP32</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Camera STSS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html, * {
+            font-family: 'Sarabun', sans-serif !important;
+        }
+    </style>
 </head>
-<body>
-    <div>Teachable Machine Image Model</div>
-    <button type="button" onclick="init()">Start</button>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
+    <script>
+        // URL โลโก้โรงเรียน
+        const logo = "https://www.stss.ac.th/img/stss_logo.png"; // เปลี่ยนเป็นโลโก้โรงเรียนของคุณ
+    </script>
+    <div class="w-full min-h-screen flex flex-col items-center justify-start bg-gray-50">
+        <!-- โลโก้ 3 อันด้านบน -->
+        <div class="flex flex-row items-center justify-center gap-8 mt-8 mb-4">
+            <img id="school-logo" src="" alt="School Logo" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200" />
+            <img src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png" alt="Camera Icon" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200" />
+            <img src="https://www.depa.or.th/storage/app/media/LogoDEPA-01.png" alt="Depa Logo" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200 bg-white" />
+        </div>
+        <h1 class="text-3xl font-bold text-blue-700 mb-2">Teachable Machine Image Model</h1>
+        <p class="text-gray-600 text-center mb-4">ระบบตรวจจับภาพและแจ้งเตือนผ่าน ESP32 และ Telegram</p>
+    <!-- ปุ่มเริ่มต้นถูกลบออก ให้แสดงเว็บแคมทันที -->
+        <!-- ส่วนแสดงกล้องและ label prediction -->
+        <div class="flex flex-row items-start justify-center w-full max-w-4xl gap-8">
+            <div id="webcam-container" class="flex justify-center items-center bg-white rounded-xl shadow-lg p-4"></div>
+            <div id="label-container" class="flex flex-col items-start mt-0 text-lg font-medium text-gray-800 min-w-[200px]"></div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script type="text/javascript">
+        // ...existing code...
         // the link to your model provided by Teachable Machine export panel
         const URL = "https://teachablemachine.withgoogle.com/models/7VWAUeYEJ/"; 
         const ip = "172.20.10.3";
         const sec = 3; //เวลากี่วิ ในการตรวจสอบ
 
         let telegramToken = "8246022657:AAELKeIR8Hq0434qqzjRpCIEEUUC203VT-k";
-        let chatId = "8064126089";
+        let chatId = "-4829047864";
         let model, webcam, labelContainer, maxPredictions;
+
+    // ใส่โลโก้โรงเรียน
+    document.getElementById('school-logo').src = logo;
+    // เรียก init() ทันทีเมื่อโหลดหน้าเว็บ
+    window.addEventListener('DOMContentLoaded', init);
 
         async function init() {
             const modelURL = URL + "model.json";
@@ -30,10 +62,14 @@
             await webcam.setup();
             await webcam.play();
             window.requestAnimationFrame(loop);
+            document.getElementById("webcam-container").innerHTML = "";
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = "";
             for (let i = 0; i < maxPredictions; i++) {
-                labelContainer.appendChild(document.createElement("div"));
+                const labelDiv = document.createElement("div");
+                labelDiv.className = "px-4 py-2 rounded bg-gray-100 my-2 w-full text-left shadow";
+                labelContainer.appendChild(labelDiv);
             }
         }
 
@@ -49,28 +85,28 @@
                 const classPrediction =
                     prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
+                labelContainer.childNodes[i].classList.remove('bg-green-200', 'bg-red-200');
             }
             // ถ้า class 0 (เช่น "yes") มีความมั่นใจมากกว่า 0.75 ให้เปิด LED
             if (prediction[0].probability > 0.75) {
+                labelContainer.childNodes[0].classList.add('bg-green-200');
                 sendTelegram('ล้ม FALL');
                 sendToESP('yes');
-                
             }
             // ถ้า class 1 (เช่น "no") มีความมั่นใจมากกว่า 0.75 ให้ปิด LED
             if (prediction[1].probability > 0.75) {
+                labelContainer.childNodes[1].classList.add('bg-red-200');
                 sendToESP('no');
             }
         }
 
-        // ส่งค่าไปยัง ESP32 (host2get.py)
+        // ...existing code...
         let lastSend = 0;
         function sendToESP(action) {
-            // ส่งได้ไม่เกิน 1 ครั้งทุก 5000 มิลลิวินาที
             if (Date.now() - lastSend > sec*1000) {
                 lastSend = Date.now();
                 var img = new Image();
                 img.src = "http://"+ip+"/" + "?action=" + action;
-                // เปลี่ยน <IP_ESP32> เป็น IP ของ ESP32 ที่รัน host2get.py
             }
         }
         let lastTelegramSent = 0;
@@ -88,10 +124,9 @@
                     .then(data => console.log('Telegram response:', data))
                     .catch(error => console.error('Telegram error:', error));
                 lastTelegramSent = now;
-            } else {
-                //console.warn('Telegram not initialized. Call initTelegram(token, chatId) first.');
             }
         }
+        // ...existing code...
     </script>
 </body>
 </html>
