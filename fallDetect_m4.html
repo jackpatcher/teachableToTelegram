@@ -7,26 +7,29 @@
     <title>Care Camera STSS</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body, html, * {
-            font-family: 'Sarabun', sans-serif !important;
-        }
-    </style>
+        <style>
+            body, html, * {
+                font-family: 'Sarabun', sans-serif !important;
+            }
+            body {
+                background-color: #FFD93D !important;
+            }
+        </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
     <script>
         // URL โลโก้โรงเรียน
         const logo = "https://www.stss.ac.th/img/stss_logo.png"; // เปลี่ยนเป็นโลโก้โรงเรียนของคุณ
     </script>
-    <div class="w-full min-h-screen flex flex-col items-center justify-start bg-gray-50">
+        <div class="w-full min-h-screen flex flex-col items-center justify-start">
         <!-- โลโก้ 3 อันด้านบน -->
         <div class="flex flex-row items-center justify-center gap-8 mt-8 mb-4">
             <img id="school-logo" src="" alt="School Logo" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200" />
-            <img src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png" alt="Camera Icon" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200" />
+            <img src="careconnect.jpg" alt="Camera Icon" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200" />
             <img src="https://www.depa.or.th/storage/app/media/LogoDEPA-01.png" alt="Depa Logo" class="w-20 h-20 object-contain rounded-full shadow-md border border-gray-200 bg-white" />
         </div>
-        <h1 class="text-3xl font-bold text-blue-700 mb-2">Teachable Machine Image Model</h1>
-        <p class="text-gray-600 text-center mb-4">ระบบตรวจจับภาพและแจ้งเตือนผ่าน ESP32 และ Telegram</p>
+        <h1 class="text-3xl font-bold text-blue-700 mb-2">CareConnect</h1>
+        <p class="text-gray-600 text-center mb-4">ระบบตรวจจับการล้มและแจ้งเตือนผ่าน Telegram</p>
     <!-- ปุ่มเริ่มต้นถูกลบออก ให้แสดงเว็บแคมทันที -->
         <!-- ส่วนแสดงกล้องและ label prediction -->
         <div class="flex flex-row items-start justify-center w-full max-w-4xl gap-8">
@@ -58,7 +61,7 @@
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
             const flip = true;
-            webcam = new tmImage.Webcam(400, 400, flip);
+            webcam = new tmImage.Webcam(300, 300, flip);
             await webcam.setup();
             await webcam.play();
             window.requestAnimationFrame(loop);
@@ -85,17 +88,17 @@
                 const classPrediction =
                     prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
-                labelContainer.childNodes[i].classList.remove('bg-green-200', 'bg-red-200');
+                labelContainer.childNodes[i].classList.remove('bg-green-200', 'bg-red-400');
             }
             // ถ้า class 0 (เช่น "yes") มีความมั่นใจมากกว่า 0.75 ให้เปิด LED
             if (prediction[0].probability > 0.75) {
-                labelContainer.childNodes[0].classList.add('bg-green-200');
+                labelContainer.childNodes[0].classList.add('bg-red-400');
                 sendTelegram('ล้ม FALL');
                 sendToESP('yes');
             }
             // ถ้า class 1 (เช่น "no") มีความมั่นใจมากกว่า 0.75 ให้ปิด LED
             if (prediction[1].probability > 0.75) {
-                labelContainer.childNodes[1].classList.add('bg-red-200');
+                labelContainer.childNodes[1].classList.add('bg-green-200');
                 sendToESP('no');
             }
         }
